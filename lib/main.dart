@@ -1,121 +1,112 @@
+import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
-
-import 'package:desktop_window/desktop_window.dart';
+import 'package:flutter/services.dart' as rootBundle;
+import 'ProductDataModel.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String _windowSize = 'Unknown';
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  Future _getWindowSize() async {
-    var size = await DesktopWindow.getWindowSize();
-    setState(() {
-      _windowSize = '${size.width} x ${size.height}';
-    });
-  }
-
+class MyApp extends StatelessWidget {
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    // MediaQuery.of(context).size;
+    return MaterialApp(
+     
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      
+      home: MyHomePage(),
+       
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('desktop_window example app'),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('$_windowSize\n'),
-              TextButton(
-                child: Text("getWindowSize"),
-                onPressed: _getWindowSize,
-              ),
-              TextButton(
-                child: Text("setMinWindowSize(300,400)"),
-                onPressed: () async {
-                  await DesktopWindow.setMinWindowSize(Size(300, 400));
-                },
-              ),
-              TextButton(
-                child: Text("setMaxWindowSize(300,400)"),
-                onPressed: () async {
-                  await DesktopWindow.setMaxWindowSize(Size(300, 400));
-                },
-              ),
-              Wrap(
-                children: [
-             TextButton(
-                    child: Text("Smaller"),
-                    onPressed: () async {
-                      var size = await DesktopWindow.getWindowSize();
-                      await DesktopWindow.setWindowSize(
-                          Size(size.width - 50, size.height - 50));
-                      await _getWindowSize();
-                    },
-                  ),
-                  TextButton(
-                    child: Text("Larger"),
-                    onPressed: () async {
-                      var size = await DesktopWindow.getWindowSize();
-                      await DesktopWindow.setWindowSize(
-                          Size(size.width +50, size.height + 50));
-                      await _getWindowSize();
-                    },
-                  ),
-                ],
-              ),
-              // Wrap(
-              //   children: [
-              //     TextButton(
-              //       child: Text("toggleFullScreen"),
-              //       onPressed: () async {
-              //         await DesktopWindow.resetMaxWindowSize();
-              //         await DesktopWindow.toggleFullScreen();
-              //       },
-              //     ),
-              //     Builder(builder: (ctx) {
-              //       return TextButton(
-              //         child: Text("getFullScreen"),
-              //         onPressed: () async {
-              //           final isFullScreen =
-              //               await DesktopWindow.getFullScreen();
-              //           // Scaffold.of(ctx).showSnackBar(SnackBar(
-              //           //     content: Text('getFullScreen = $isFullScreen'),
-              //           //     duration: Duration(seconds: 1)));
-              //         },
-              //       );
-              //     }),
-                 TextButton(
-                    child: Text("setFullScreen(false)"),
-                    onPressed: () async {
-                      await DesktopWindow.setFullScreen(true);
-                    },
-                  ),
-                  TextButton(
-                    child: Text("setFullScreen(false)"),
-                    onPressed: () async {
-                      await DesktopWindow.setFullScreen(false);
-                    },
-                  ),
-                ],
-              ),
-            
-          ),
-        ),
-      );
+          body: FutureBuilder(
+        future: ReadJsonData(),
+        builder: (context, data) {
+          if (data.hasError) {
+            return Center(child: Text("${data.error}"));
+          } else if (data.hasData) {
+            var items = data.data as List<ProductDataModel>;
+            return ListView.builder(
+                itemCount: items == null ? 0 : items.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    color: Colors.blue[100],
+                    elevation: 5,
+                    margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: Container(
+                      padding: EdgeInsets.all(8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            child: Image(
+                              image: NetworkImage(
+                                  items[index].imageURL.toString()),
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                          Expanded(
+                              child: Container(
+                            padding: EdgeInsets.only(bottom: 8),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(left: 8, right: 8),
+                                  child: Text(
+                                    items[index].name.toString(),
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 8, right: 8),
+                                  child: Text(items[index].price.toString()),
+                                )
+                              ],
+                            ),
+                          ))
+                        ],
+                      ),
+                    ),
+                  );
+                });
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
+      )
+      ),
+    );
+  }
+
+  Future<List<ProductDataModel>> ReadJsonData() async {
+    final jsondata =
+        await rootBundle.rootBundle.loadString('jsonfile/productlist.json');
+    final list = json.decode(jsondata) as List<dynamic>;
+    return list.map((e) => ProductDataModel.fromJson(e)).toList();
   }
 }
