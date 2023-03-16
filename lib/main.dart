@@ -44,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemCount: items == null ? 0 : items.length,
                 itemBuilder: (context, index) {
                   return Card(
-                    color: Colors.blue[100],
+                    color: Color.fromARGB(255, 173, 236, 245),
                     elevation: 5,
                     margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     child: Container(
