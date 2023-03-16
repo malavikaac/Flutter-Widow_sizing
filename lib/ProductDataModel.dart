@@ -4,7 +4,6 @@ class ProductDataModel{
   String? name;
   String? category;
   String? imageURL;
-  String? oldPrice;
   String? price;
 
 // constructor
@@ -14,7 +13,6 @@ class ProductDataModel{
       this.name,
       this.category,
       this.imageURL,
-      this.oldPrice,
       this.price
       }
    );
@@ -26,7 +24,6 @@ class ProductDataModel{
     name =json['name'];
     category = json['category'];
     imageURL = json['imageUrl'];
-    oldPrice = json['oldPrice'];
     price = json['price'];
   }
 }
